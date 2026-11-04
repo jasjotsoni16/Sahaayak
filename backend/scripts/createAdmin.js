@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-require('dotenv').config({ path: './.env' }); // Load .env from backend_new directory
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const User = require('../Model/User'); // Adjust path if necessary
 

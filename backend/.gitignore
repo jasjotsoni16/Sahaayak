@@ -1,0 +1,13 @@
+node_modules/
+coverage/
+
+# Local settings and secrets
+.env
+.env.*
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep
+
+.DS_Store
+npm-debug.log*
