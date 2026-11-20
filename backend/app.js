@@ -6,14 +6,18 @@ const { mountRoutes } = require('./routes');
 const { authLimiter } = require('./middleware/rateLimit');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
-function createApp() {
+// beforeRoutes: extra middleware run after CORS and body parsing, before any /api route
+// (the Vercel entry uses it to make sure the database is connected).
+function createApp({ beforeRoutes = [] } = {}) {
   const app = express();
+  // Behind Vercel's proxy: use the visitor's real IP, so the login limit applies per visitor
+  app.set('trust proxy', 1);
 
-  // cross-origin resource policy relaxed so the React app on :3000 can show /uploads images
+  // cross-origin resource policy relaxed so the React app can show /uploads images
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
   const origins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
-    .split(',').map((s) => s.trim()).filter(Boolean);
+    .split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean); // tolerate a trailing slash
   app.use(cors({ origin: origins }));
   app.use(express.json({ limit: '1mb' }));
 
@@ -22,6 +26,7 @@ function createApp() {
   app.use(['/api/users/login', '/api/users/signup', '/api/admin/login'], authLimiter);
 
   app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+  if (beforeRoutes.length) app.use(beforeRoutes);
   mountRoutes(app);
 
   app.post('/api/frontend-log', (req, res) => {
